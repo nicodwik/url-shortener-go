@@ -1,6 +1,9 @@
 package config
 
 import (
+	"fmt"
+	"os"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -8,7 +11,11 @@ import (
 var DBConn *gorm.DB
 
 func InitDB() (*gorm.DB, error) {
-	dsn := "root:root@tcp(host.docker.internal:3306)/url_shortener?parseTime=True"
+	dbHost := os.Getenv("DB_HOST")
+
+	fmt.Println("DB hos: " + dbHost)
+
+	dsn := fmt.Sprintf("root:root@tcp(%v:3306)/url_shortener?parseTime=True", dbHost)
 	db, err := gorm.Open(mysql.Open(dsn))
 
 	if err != nil {
