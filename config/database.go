@@ -13,8 +13,6 @@ var DBConn *gorm.DB
 func InitDB() (*gorm.DB, error) {
 	dbHost := os.Getenv("DB_HOST")
 
-	fmt.Println("DB hos: " + dbHost)
-
 	dsn := fmt.Sprintf("root:root@tcp(%v:3306)/url_shortener?parseTime=True", dbHost)
 	db, err := gorm.Open(mysql.Open(dsn))
 

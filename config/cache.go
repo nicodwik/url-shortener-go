@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -14,8 +15,10 @@ var RedisConn *redis.Client
 var ctx = context.Background()
 
 func InitCache() {
+	redisHost := os.Getenv("REDIS_HOST")
+
 	redis := redis.NewClient(&redis.Options{
-		Addr:     "host.docker.internal:16379",
+		Addr:     fmt.Sprintf("%v:16379", redisHost),
 		Password: "",
 		DB:       1,
 	})
