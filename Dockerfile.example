@@ -4,7 +4,7 @@ ENV DB_HOST "host.docker.internal"
 ENV DB_PORT "3306"
 
 ENV REDIS_HOST "host.docker.internal"
-ENV DB_PORT "6379"
+ENV REDIS_PORT "6379"
 
 WORKDIR /app
 
