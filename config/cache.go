@@ -16,9 +16,10 @@ var ctx = context.Background()
 
 func InitCache() {
 	redisHost := os.Getenv("REDIS_HOST")
+	redisPort := os.Getenv("REDIS_PORT")
 
 	redis := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%v:16379", redisHost),
+		Addr:     fmt.Sprintf("%v:%v", redisHost, redisPort),
 		Password: "",
 		DB:       1,
 	})
