@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"time"
+	"url-shortener-go/helpers"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -15,8 +15,8 @@ var RedisConn *redis.Client
 var ctx = context.Background()
 
 func InitCache() {
-	redisHost := os.Getenv("REDIS_HOST")
-	redisPort := os.Getenv("REDIS_PORT")
+	redisHost := helpers.Env("REDIS_HOST", "host.docker.internal")
+	redisPort := helpers.Env("REDIS_PORT", "6379")
 
 	redis := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%v:%v", redisHost, redisPort),

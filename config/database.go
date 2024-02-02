@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"os"
+	"url-shortener-go/helpers"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -11,8 +11,9 @@ import (
 var DBConn *gorm.DB
 
 func InitDB() (*gorm.DB, error) {
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
+
+	dbHost := helpers.Env("DB_HOST", "host.docker.internal")
+	dbPort := helpers.Env("DB_PORT", "3306")
 
 	dsn := fmt.Sprintf("root:root@tcp(%v:%v)/url_shortener?parseTime=True", dbHost, dbPort)
 	db, err := gorm.Open(mysql.Open(dsn))
