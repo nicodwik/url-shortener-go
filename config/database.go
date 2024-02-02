@@ -2,13 +2,22 @@ package config
 
 import (
 	"fmt"
+	"time"
+	"url-shortener-go/entity"
 	"url-shortener-go/helpers"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+
+	"github.com/go-faker/faker/v4"
 )
 
 var DBConn *gorm.DB
+
+type UrlSeeder struct {
+	ShortUrl string `faker:"username,len=8"`
+	LongUrl  string `faker:"url"`
+}
 
 func InitDB() (*gorm.DB, error) {
 
@@ -24,5 +33,34 @@ func InitDB() (*gorm.DB, error) {
 
 	DBConn = db
 
+	RunUrlSeeder(100)
+
 	return db, nil
+}
+
+func RunUrlSeeder(count int) ([]entity.Url, error) {
+
+	urlEntities := []entity.Url{}
+
+	for i := 0; i < count; i++ {
+		urlSeeder := UrlSeeder{}
+
+		if err := faker.FakeData(&urlSeeder); err != nil {
+			return urlEntities, err
+		}
+
+		urlEntity := entity.Url{
+			ShortUrl:  urlSeeder.ShortUrl,
+			LongUrl:   urlSeeder.LongUrl,
+			UserId:    1,
+			Status:    "active",
+			HitCount:  0,
+			CreatedAt: time.Now(),
+		}
+
+		urlEntities = append(urlEntities, urlEntity)
+
+	}
+
+	return urlEntities, nil
 }

@@ -120,3 +120,12 @@ func SyncronizeHitCount(inputData map[string]interface{}) error {
 
 	return nil
 }
+
+func BatchInsertUrls(urlEntities []entity.Url) error {
+
+	if err := config.DBConn.Create(&urlEntities).Error; err != nil {
+		return err
+	}
+
+	return nil
+}

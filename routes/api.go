@@ -12,4 +12,6 @@ func Init(e *echo.Echo) {
 	e.GET("/redirect/:short_url", url.Redirect)
 
 	e.POST("/insert", url.InsertNewUrl)
+	e.POST("/batch-insert-seeder", url.BatchInsertUrlsSeeder)
+
 }
