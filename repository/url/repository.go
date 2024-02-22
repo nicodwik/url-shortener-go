@@ -8,23 +8,67 @@ import (
 	"url-shortener-go/config"
 	"url-shortener-go/entity"
 
+	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
 
-// type UrlRepository interface {
-// 	GetAll() ([]UrlEntity, error)
-// }
+type PaginationResponse struct {
+	Items interface{}    `json:"items"`
+	Meta  PaginationMeta `json:"meta"`
+}
 
-func GetAll() ([]entity.Url, error) {
-	var urls []entity.Url
+type PaginationMeta struct {
+	CurrentPage  int   `json:"current_page,omitempty"`
+	Limit        int   `json:"limit,omitempty"`
+	TotalItems   int64 `json:"total_items"`
+	TotalPages   int   `json:"total_pages"`
+	ItemsPerPage int   `json:"items_per_page"`
+}
 
-	if err := config.DBConn.Find(&urls).Error; err != nil {
-		log.Fatalf("Failed to connect DB: %v", err)
+func Paginate(c echo.Context, model interface{}, paginationMeta *PaginationMeta, db *gorm.DB) func(db *gorm.DB) *gorm.DB {
 
-		return nil, err
+	var totalItems int64
+	db.Model(&model).Count(&totalItems)
+
+	paginationMeta.TotalItems = totalItems
+
+	page, _ := strconv.Atoi(c.QueryParam("page"))
+	if page <= 0 {
+		page = 1
 	}
 
-	return urls, nil
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	if limit <= 0 {
+		limit = 10
+	}
+
+	paginationMeta.Limit = limit
+	paginationMeta.CurrentPage = page
+	paginationMeta.TotalPages = (int(totalItems) / limit) + 1
+
+	return func(db *gorm.DB) *gorm.DB {
+		offset := (page - 1) * limit
+		return db.Offset(offset).Limit(limit)
+	}
+}
+
+func GetAll(c echo.Context) (*PaginationResponse, error) {
+	var urls []entity.Url
+	paginationResponse := PaginationResponse{}
+	paginationMeta := PaginationMeta{}
+
+	if err := config.DBConn.Scopes(Paginate(c, urls, &paginationMeta, config.DBConn)).Order("created_at DESC").Find(&urls).Error; err != nil {
+		log.Fatalf("Failed to connect DB: %v", err)
+
+		return &paginationResponse, err
+	}
+
+	paginationMeta.ItemsPerPage = len(urls)
+
+	paginationResponse.Items = &urls
+	paginationResponse.Meta = paginationMeta
+
+	return &paginationResponse, nil
 }
 
 func InsertNewUrl(shortUrl string, longUrl string) (*entity.Url, error) {

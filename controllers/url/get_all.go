@@ -11,7 +11,7 @@ import (
 
 func GetAll(c echo.Context) error {
 
-	urls, err := UrlRepository.GetAll()
+	urls, err := UrlRepository.GetAll(c)
 	if err != nil {
 		log.Fatal(err)
 	}

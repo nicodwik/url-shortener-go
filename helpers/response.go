@@ -1,9 +1,11 @@
 package helpers
 
+import "log"
+
 type Response struct {
 	Status  string      `json:"status"`
 	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 type ValidationResponse struct {
@@ -35,6 +37,16 @@ func ResponseValidationError(validationErrors []string) interface{} {
 		Status:  "error",
 		Message: "Validation Error",
 		Errors:  validationErrors,
+	}
+	return response
+}
+
+func ResponseServerError(message string, err error) interface{} {
+	log.Println(message + ": " + err.Error())
+
+	response := Response{
+		Status:  "error",
+		Message: message,
 	}
 	return response
 }

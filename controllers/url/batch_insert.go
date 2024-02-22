@@ -1,7 +1,6 @@
 package url
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"url-shortener-go/config"
@@ -25,13 +24,11 @@ func BatchInsertUrlsSeeder(c echo.Context) error {
 
 	urlEntities, err := config.RunUrlSeeder(countInt)
 	if err != nil {
-		log.Println(err)
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Internal server error!"})
+		return c.JSON(http.StatusBadRequest, helpers.ResponseServerError("Something went wrong!", err))
 	}
 
 	if err := UrlRepository.BatchInsertUrls(urlEntities); err != nil {
-		log.Println(err)
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Internal server error!"})
+		return c.JSON(http.StatusBadRequest, helpers.ResponseServerError("Something went wrong!", err))
 	}
 
 	return c.JSON(http.StatusOK, helpers.ResponseOK("URLs successfully created, total: "+count+" items", []string{}))
