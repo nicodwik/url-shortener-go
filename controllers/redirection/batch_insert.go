@@ -1,11 +1,11 @@
-package url
+package redirection
 
 import (
 	"net/http"
 	"strconv"
 	"url-shortener-go/config"
 	"url-shortener-go/helpers"
-	UrlRepository "url-shortener-go/repository/url"
+	RedirectionRepository "url-shortener-go/repository/redirection"
 
 	"github.com/labstack/echo/v4"
 )
@@ -27,7 +27,7 @@ func BatchInsertUrlsSeeder(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, helpers.ResponseServerError("Something went wrong!", err))
 	}
 
-	if err := UrlRepository.BatchInsertUrls(urlEntities); err != nil {
+	if err := RedirectionRepository.BatchInsertredirections(urlEntities); err != nil {
 		return c.JSON(http.StatusBadRequest, helpers.ResponseServerError("Something went wrong!", err))
 	}
 

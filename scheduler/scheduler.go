@@ -3,7 +3,7 @@ package scheduler
 import (
 	"fmt"
 	"url-shortener-go/config"
-	UrlRepository "url-shortener-go/repository/url"
+	RedirectionRepository "url-shortener-go/repository/redirection"
 
 	"github.com/jasonlvhit/gocron"
 )
@@ -27,7 +27,7 @@ func syncHitCountUrl() error {
 
 	fmt.Printf("[hit count] data: %v items \n", len(cacheData))
 	if len(cacheData) > 0 {
-		err = UrlRepository.SyncronizeHitCount(cacheData)
+		err = RedirectionRepository.SyncronizeHitCount(cacheData)
 		if err != nil {
 			return err
 		}

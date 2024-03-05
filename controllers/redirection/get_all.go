@@ -1,17 +1,17 @@
-package url
+package redirection
 
 import (
 	"log"
 	"net/http"
 	"url-shortener-go/helpers"
-	UrlRepository "url-shortener-go/repository/url"
+	RedirectionRepository "url-shortener-go/repository/redirection"
 
 	"github.com/labstack/echo/v4"
 )
 
 func GetAll(c echo.Context) error {
 
-	urls, err := UrlRepository.GetAll(c)
+	urls, err := RedirectionRepository.GetAll(c)
 	if err != nil {
 		log.Fatal(err)
 	}

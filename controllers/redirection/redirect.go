@@ -1,9 +1,9 @@
-package url
+package redirection
 
 import (
 	"net/http"
 	"url-shortener-go/helpers"
-	UrlRepository "url-shortener-go/repository/url"
+	RedirectionRepository "url-shortener-go/repository/redirection"
 
 	"github.com/labstack/echo/v4"
 )
@@ -20,7 +20,7 @@ func Redirect(c echo.Context) error {
 		return err
 	}
 
-	url, err := UrlRepository.FindRedirection(redirectParams.ShortUrl)
+	url, err := RedirectionRepository.FindRedirection(redirectParams.ShortUrl)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, helpers.ResponseNotFound("URL Not Found"))
 	}
@@ -29,7 +29,7 @@ func Redirect(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, helpers.ResponseNotFound("URL Not Found"))
 	}
 
-	UrlRepository.IncementHitCount(url.ShortUrl)
+	RedirectionRepository.IncementHitCount(url.ShortUrl)
 
 	return c.JSON(http.StatusOK, helpers.ResponseOK("URL Found", map[string]string{"long_url": url.LongUrl}))
 }

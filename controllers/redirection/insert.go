@@ -1,11 +1,12 @@
-package url
+package redirection
 
 import (
 	"fmt"
 	"net/http"
+	"url-shortener-go/config"
 	"url-shortener-go/helpers"
-	UrlRepository "url-shortener-go/repository/url"
-	requests "url-shortener-go/requests/url"
+	RedirectionRepository "url-shortener-go/repository/redirection"
+	requests "url-shortener-go/requests/redirection"
 
 	"github.com/labstack/echo/v4"
 )
@@ -14,7 +15,11 @@ func InsertNewUrl(c echo.Context) error {
 	shortUrl := c.FormValue("short_url")
 	longUrl := c.FormValue("long_url")
 
-	insertUrlValidation := requests.InsertUrlValidation{
+	userId, _ := config.GetUserIdByToken(c)
+
+	fmt.Println(userId)
+
+	insertUrlValidation := requests.InsertRedirectionValidation{
 		ShortUrl: shortUrl,
 		LongUrl:  longUrl,
 	}
@@ -26,12 +31,12 @@ func InsertNewUrl(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, helpers.ResponseValidationError(validationErrors))
 	}
 
-	findUrl, _ := UrlRepository.FindRedirection(shortUrl)
+	findUrl, _ := RedirectionRepository.FindRedirection(shortUrl)
 	if len(findUrl.ShortUrl) > 0 {
 		return c.JSON(http.StatusBadRequest, helpers.ResponseValidationError([]string{"Short URL have been taken, please choose another!"}))
 	}
 
-	urlEntity, err := UrlRepository.InsertNewUrl(shortUrl, longUrl)
+	urlEntity, err := RedirectionRepository.InsertNewUrl(shortUrl, longUrl, userId)
 	if err != nil {
 		return err
 	}

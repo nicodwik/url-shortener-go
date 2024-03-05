@@ -38,9 +38,9 @@ func InitDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func RunUrlSeeder(count int) ([]entity.Url, error) {
+func RunUrlSeeder(count int) ([]entity.Redirection, error) {
 
-	urlEntities := []entity.Url{}
+	urlEntities := []entity.Redirection{}
 
 	for i := 0; i < count; i++ {
 		urlSeeder := UrlSeeder{}
@@ -49,10 +49,10 @@ func RunUrlSeeder(count int) ([]entity.Url, error) {
 			return urlEntities, err
 		}
 
-		urlEntity := entity.Url{
+		urlEntity := entity.Redirection{
 			ShortUrl:  urlSeeder.ShortUrl,
 			LongUrl:   urlSeeder.LongUrl,
-			UserId:    1,
+			UserId:    "dbc587c2-98a8-4ab2-b306-4954d9e83dbf",
 			Status:    "active",
 			HitCount:  0,
 			CreatedAt: time.Now(),

@@ -6,6 +6,7 @@ type Response struct {
 	Status  string      `json:"status"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
+	Error   string      `json:"error,omitempty"`
 }
 
 type ValidationResponse struct {
@@ -25,7 +26,7 @@ func ResponseOK(message string, data interface{}) interface{} {
 
 func ResponseNotFound(message string) interface{} {
 	response := Response{
-		Status:  "error",
+		Status:  "not-found",
 		Message: message,
 		Data:    []string{},
 	}
@@ -34,7 +35,7 @@ func ResponseNotFound(message string) interface{} {
 
 func ResponseValidationError(validationErrors []string) interface{} {
 	response := ValidationResponse{
-		Status:  "error",
+		Status:  "validation-error",
 		Message: "Validation Error",
 		Errors:  validationErrors,
 	}
@@ -42,11 +43,23 @@ func ResponseValidationError(validationErrors []string) interface{} {
 }
 
 func ResponseServerError(message string, err error) interface{} {
-	log.Println(message + ": " + err.Error())
+	log.Println("server-error: " + err.Error())
 
 	response := Response{
-		Status:  "error",
+		Status:  "server-error",
 		Message: message,
+		Error:   err.Error(),
+	}
+	return response
+}
+
+func ResponseUnauthorized(err error) interface{} {
+	log.Println("unauthorized: " + err.Error())
+
+	response := Response{
+		Status:  "unauthorized",
+		Message: "Unauthorized, please re-login!",
+		Error:   err.Error(),
 	}
 	return response
 }

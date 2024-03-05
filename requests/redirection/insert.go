@@ -1,6 +1,6 @@
 package requests
 
-type InsertUrlValidation struct {
+type InsertRedirectionValidation struct {
 	ShortUrl string `validate:"required"`
 	LongUrl  string `validate:"required"`
 }
