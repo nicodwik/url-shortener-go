@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"time"
 	"url-shortener-go/entity"
 	"url-shortener-go/helpers"
@@ -41,6 +42,14 @@ func InitDB() (*gorm.DB, error) {
 func RunUrlSeeder(count int) ([]entity.Redirection, error) {
 
 	urlEntities := []entity.Redirection{}
+	userEntity := entity.User{}
+
+	if err := DBConn.First(&userEntity).Error; err != nil {
+		log.Println("Error DB: ", err.Error())
+		return nil, err
+	}
+
+	fmt.Println(&userEntity)
 
 	for i := 0; i < count; i++ {
 		urlSeeder := UrlSeeder{}
@@ -52,7 +61,7 @@ func RunUrlSeeder(count int) ([]entity.Redirection, error) {
 		urlEntity := entity.Redirection{
 			ShortUrl:  urlSeeder.ShortUrl,
 			LongUrl:   urlSeeder.LongUrl,
-			UserId:    "dbc587c2-98a8-4ab2-b306-4954d9e83dbf",
+			UserId:    userEntity.Id,
 			Status:    "active",
 			HitCount:  0,
 			CreatedAt: time.Now(),
