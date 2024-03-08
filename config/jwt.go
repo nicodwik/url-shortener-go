@@ -14,9 +14,10 @@ type CustomClaim struct {
 	jwt.RegisteredClaims
 	Id    string `json:"id"`
 	Email string `json:"email"`
+	Name  string `json:"name"`
 }
 
-func GenerateJwtToken(id string, email string) string {
+func GenerateJwtToken(id string, email string, name string) string {
 
 	signedKeys := []byte("asdasd")
 
@@ -27,6 +28,7 @@ func GenerateJwtToken(id string, email string) string {
 		},
 		id,
 		email,
+		name,
 	}
 
 	rawToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)

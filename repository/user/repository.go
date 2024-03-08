@@ -91,7 +91,7 @@ func DoLogin(email string, password string) (*Token, error) {
 		return nil, err
 	}
 
-	token := config.GenerateJwtToken(user.Id, user.Email)
+	token := config.GenerateJwtToken(user.Id, user.Email, user.Name)
 	tokenStruct := Token{AccessToken: token}
 
 	return &tokenStruct, nil
