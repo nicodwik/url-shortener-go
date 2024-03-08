@@ -17,7 +17,9 @@ func InsertNewUrl(c echo.Context) error {
 
 	userId, _ := config.GetUserIdByToken(c)
 
-	fmt.Println(userId)
+	if len(userId) == 0 {
+		userId = c.RealIP()
+	}
 
 	insertUrlValidation := requests.InsertRedirectionValidation{
 		ShortUrl: shortUrl,
