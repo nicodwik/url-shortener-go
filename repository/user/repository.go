@@ -67,7 +67,6 @@ func InsertNewUser(name string, email string, password string) (*entity.User, er
 
 func FindUserById(userId string) (*entity.User, error) {
 	cacheKey := fmt.Sprintf("user:detail:%v", userId)
-	userEntity := entity.User{}
 
 	user, _ := config.CacheRememberV2(cacheKey, 3600, func() interface{} {
 		userEntity := entity.User{}
@@ -82,7 +81,7 @@ func FindUserById(userId string) (*entity.User, error) {
 		}
 
 		return &userEntity
-	}, &userEntity)
+	}, entity.User{})
 
 	dataUser := user.(*entity.User)
 
