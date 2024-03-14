@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 	"url-shortener-go/helpers"
@@ -55,6 +56,45 @@ func CacheRemember(key string, timeout int, callback func() interface{}) (string
 	}
 
 	return returnData, nil
+}
+
+func CacheRememberV2(key string, timeout int, callback func() interface{}, parsedData interface{}) (interface{}, error) {
+	var returnData string
+	cachePrefix := "url-shortener-go:redirection:"
+	fullCacheKey := cachePrefix + key
+
+	cachedData := RedisConn.Get(ctx, fullCacheKey)
+
+	if len(cachedData.Val()) == 0 {
+		value := callback()
+
+		if value != nil {
+			bytesValue, err := json.Marshal(value)
+			if err != nil {
+				return nil, err
+			}
+
+			err = RedisConn.Set(ctx, fullCacheKey, bytesValue, 15*time.Minute).Err()
+			if err != nil {
+				return nil, err
+			}
+
+			returnData = string(bytesValue)
+		}
+	} else {
+		returnData = cachedData.Val()
+	}
+
+	if len(returnData) > 0 {
+		err := json.Unmarshal([]byte(returnData), &parsedData)
+
+		if err != nil {
+			log.Printf("Failed to unmarshal JSON: %v", err)
+			return nil, err
+		}
+	}
+
+	return parsedData, nil
 }
 
 func CacheIncrement(prefix string, key string) error {

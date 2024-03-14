@@ -12,9 +12,7 @@ import (
 
 type CustomClaim struct {
 	jwt.RegisteredClaims
-	Id    string `json:"id"`
-	Email string `json:"email"`
-	Name  string `json:"name"`
+	Id string `json:"id"`
 }
 
 func GenerateJwtToken(id string, email string, name string) string {
@@ -27,8 +25,6 @@ func GenerateJwtToken(id string, email string, name string) string {
 			Issuer:    "asu",
 		},
 		id,
-		email,
-		name,
 	}
 
 	rawToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)

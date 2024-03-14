@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"url-shortener-go/config"
 	"url-shortener-go/entity"
@@ -65,18 +66,27 @@ func InsertNewUser(name string, email string, password string) (*entity.User, er
 }
 
 func FindUserById(userId string) (*entity.User, error) {
+	cacheKey := fmt.Sprintf("user:detail:%v", userId)
 	userEntity := entity.User{}
 
-	err := config.DBConn.Where(&entity.User{Id: userId}).First(&userEntity).Error
-	if err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Fatalf("Failed to connect DB: %v", err)
+	user, _ := config.CacheRememberV2(cacheKey, 3600, func() interface{} {
+		userEntity := entity.User{}
+
+		err := config.DBConn.Where(&entity.User{Id: userId}).First(&userEntity).Error
+		if err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				log.Fatalf("Failed to connect DB: %v", err)
+			}
+
+			return nil
 		}
 
-		return nil, err
-	}
+		return &userEntity
+	}, &userEntity)
 
-	return &userEntity, nil
+	dataUser := user.(*entity.User)
+
+	return dataUser, nil
 }
 
 func DoLogin(email string, password string) (*Token, error) {

@@ -17,6 +17,7 @@ func Init(e *echo.Echo) {
 
 	{
 		user.Use(echojwt.WithConfig(config.JwtConfig()))
+		user.GET("", UserController.GetLoggedIn)
 		user.GET("/redirections", UserController.GetRedirections)
 		// user.GET("/:id", UserController.GetRedirections)
 		user.GET("/:id/redirections", RedirectionController.GetAll)
