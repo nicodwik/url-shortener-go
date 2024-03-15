@@ -5,7 +5,7 @@ import (
 	"time"
 	"url-shortener-go/middlewares"
 
-	"github.com/golang-jwt/jwt/v5"
+	jwt "github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt"
 	"github.com/labstack/echo/v4"
 )
