@@ -1,6 +1,8 @@
 package entity
 
-import "time"
+import (
+	"time"
+)
 
 type Redirection struct {
 	ShortUrl  string     `gorm:"primarykey" json:"short_url"`
@@ -10,4 +12,12 @@ type Redirection struct {
 	HitCount  int        `json:"hit_count"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at"`
+}
+
+func (r Redirection) NullSafe() *Redirection {
+	if len(r.ShortUrl) == 0 {
+		return nil
+	}
+
+	return &r
 }

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"url-shortener-go/config"
+	DashboardController "url-shortener-go/controllers"
 	RedirectionController "url-shortener-go/controllers/redirection"
 	UserController "url-shortener-go/controllers/user"
 
@@ -34,4 +35,8 @@ func Init(e *echo.Echo) {
 	v1.POST("/email-validator", UserController.EmailValidator)
 	v1.POST("/register", UserController.Register)
 
+	{
+		v1.Use(echojwt.WithConfig(config.JwtConfig()))
+		v1.GET("/dashboard", DashboardController.Dashboard)
+	}
 }
