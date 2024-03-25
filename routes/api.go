@@ -2,7 +2,7 @@ package routes
 
 import (
 	"url-shortener-go/config"
-	DashboardController "url-shortener-go/controllers"
+	"url-shortener-go/controllers"
 	RedirectionController "url-shortener-go/controllers/redirection"
 	UserController "url-shortener-go/controllers/user"
 
@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func Init(e *echo.Echo) {
+func Init(e *echo.Echo, DashboardController controllers.DashboardController) {
 
 	v1 := e.Group("/api/v1")
 	redirection := v1.Group("/redirection")
