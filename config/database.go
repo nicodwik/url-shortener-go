@@ -50,8 +50,6 @@ func RunUrlSeeder(count int) ([]entity.Redirection, error) {
 		return nil, err
 	}
 
-	fmt.Println(&userEntity)
-
 	for i := 0; i < count; i++ {
 		urlSeeder := UrlSeeder{}
 
