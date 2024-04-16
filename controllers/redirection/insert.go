@@ -54,7 +54,7 @@ func InsertNewUrl(c echo.Context) error {
 
 	urlEntity, err := RedirectionRepository.InsertNewUrl(shortUrl, longUrl, userId)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusInternalServerError, helpers.ResponseServerError("Something Went Wrong", err))
 	}
 
 	return c.JSON(http.StatusOK, helpers.ResponseOK("Url successfully created!", urlEntity))
