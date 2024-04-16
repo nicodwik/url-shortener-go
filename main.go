@@ -17,7 +17,7 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatalf("Error loading .env file: %v", err)
 	}
 
 	config.InitCache()
@@ -34,6 +34,6 @@ func main() {
 
 	appPort := fmt.Sprintf(":%v", helpers.Env("APP_PORT", "8000"))
 	if err := e.Start(appPort); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error Starting Server: %v", err)
 	}
 }
