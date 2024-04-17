@@ -1,0 +1,8 @@
+services:
+    be-service:
+        build:
+            context: ./url-shortener-go
+            dockerfile: Dockerfile.production
+        ports:
+            - '8002:8002'
+        restart: always

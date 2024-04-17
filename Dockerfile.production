@@ -7,5 +7,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /app/executable.sh
 FROM alpine:3.19.1
 
 WORKDIR /app
+COPY .env .
 COPY --from=builder /app/executable.sh /app/executable.sh
 CMD ["/app/executable.sh"]
