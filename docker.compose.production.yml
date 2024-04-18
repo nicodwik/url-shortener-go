@@ -6,3 +6,8 @@ services:
         ports:
             - '8002:8002'
         restart: always
+        networks:
+           - "url-shortener"
+networks:
+    url-shortener:
+       driver: bridge
