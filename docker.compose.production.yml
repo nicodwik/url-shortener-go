@@ -6,6 +6,8 @@ services:
         ports:
             - '8002:8002'
         restart: always
+        extra_hosts:
+            - host.docker.internal:host-gateway
         networks:
            - "url-shortener-network"
 networks:
