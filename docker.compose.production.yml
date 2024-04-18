@@ -1,6 +1,6 @@
 services:
     be-service:
-        container_name: be-service
+        container_name: url-shortener-be-service
         build:
             context: ./
             dockerfile: Dockerfile.production
