@@ -1,5 +1,6 @@
 services:
     be-service:
+        container_name: be-service
         build:
             context: ./
             dockerfile: Dockerfile.production
