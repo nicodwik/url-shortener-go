@@ -4,7 +4,7 @@ WORKDIR /app
 COPY . /app
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/executable.sh
 
-FROM alpine:3.19.1
+FROM alpine/curl:8.5.0
 
 WORKDIR /app
 COPY .env .
