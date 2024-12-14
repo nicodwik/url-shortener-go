@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"errors"
+	"sync"
 	"url-shortener-go/entity"
 
 	"gorm.io/gorm"
@@ -22,54 +23,97 @@ type connection struct {
 	db *gorm.DB
 }
 
-func InitDasboardRepository(db *gorm.DB) *connection {
+type DashboardResponseChan struct {
+	name string
+	data interface{}
+}
+
+func InitDasboardRepository(db *gorm.DB) DashboardContract {
 	return &connection{db}
 }
 
 func (conn *connection) GetDashboardData(userId string) (*DashboardResponse, error) {
-
+	totalExpectedData := 4
 	dashboardResponse := DashboardResponse{}
-	var totalRedirections int64
 
-	var redirection entity.Redirection
-	var mostVisitedRedirection *entity.Redirection
-	var mostNotVisitedRedirection entity.Redirection
-	var lastCreatedRedirection entity.Redirection
+	c := make(chan DashboardResponseChan, totalExpectedData)
+	var wg sync.WaitGroup
 
-	// get total active
-	query1 := entity.Redirection{UserId: userId, Status: "active"}
-	if err := conn.db.Model(&redirection).Where(query1).Count(&totalRedirections).Error; err != nil {
-		return nil, err
-	}
+	wg.Add(totalExpectedData)
+	go conn.getTotalActive(userId, &wg, c)
+	go conn.getMostVisited(userId, &wg, c)
+	go conn.getMostNotVisited(userId, &wg, c)
+	go conn.getLastCreated(userId, &wg, c)
 
-	// get most visited
-	query2 := entity.Redirection{UserId: userId}
-	if err := conn.db.Where(query2).Group("hit_count").Having("MAX(hit_count)").Order("hit_count DESC").First(&mostVisitedRedirection).Error; err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
+	wg.Wait()
+	close(c)
+
+	for d := range c {
+		if val, ok := d.data.(int64); ok {
+			dashboardResponse.TotalActive = val
+		}
+
+		if val, ok := d.data.(entity.Redirection); ok {
+			switch d.name {
+			case "mv":
+				dashboardResponse.MostVisited = &val
+			case "mnv":
+				dashboardResponse.MostNotVisited = &val
+			case "lc":
+				dashboardResponse.LastCreated = &val
+			}
 		}
 	}
-
-	// get most not visited
-	query3 := entity.Redirection{UserId: userId}
-	if err := conn.db.Where(query3).Group("hit_count").Having("MIN(hit_count) >= 0").Order("hit_count ASC").First(&mostNotVisitedRedirection).Error; err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
-		}
-	}
-
-	// get last created
-	query4 := entity.Redirection{UserId: userId}
-	if err := conn.db.Where(query4).Group("created_at").Having("MIN(created_at)").Order("created_at DESC").First(&lastCreatedRedirection).Error; err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
-		}
-	}
-
-	dashboardResponse.TotalActive = totalRedirections
-	dashboardResponse.MostVisited = mostVisitedRedirection.NullSafe()
-	dashboardResponse.MostNotVisited = mostNotVisitedRedirection.NullSafe()
-	dashboardResponse.LastCreated = lastCreatedRedirection.NullSafe()
 
 	return &dashboardResponse, nil
+}
+
+// get total active
+func (conn *connection) getTotalActive(userId string, wg *sync.WaitGroup, c chan<- DashboardResponseChan) {
+	defer wg.Done()
+
+	var totalRedirections int64
+	if err := conn.db.Model(&entity.Redirection{}).Where(&entity.Redirection{UserId: userId, Status: "active"}).Count(&totalRedirections).Error; err != nil {
+		return
+	}
+	c <- DashboardResponseChan{name: "ta", data: totalRedirections}
+}
+
+// get most visited
+func (conn *connection) getMostVisited(userId string, wg *sync.WaitGroup, c chan<- DashboardResponseChan) {
+	defer wg.Done()
+
+	var mostVisitedRedirection entity.Redirection
+	if err := conn.db.Where(&entity.Redirection{UserId: userId}).Group("hit_count").Having("MAX(hit_count)").Order("hit_count DESC").First(&mostVisitedRedirection).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return
+		}
+	}
+	c <- DashboardResponseChan{name: "mv", data: mostVisitedRedirection}
+}
+
+// get most not visited
+func (conn *connection) getMostNotVisited(userId string, wg *sync.WaitGroup, c chan<- DashboardResponseChan) {
+	defer wg.Done()
+
+	var mostNotVisitedRedirection entity.Redirection
+	if err := conn.db.Where(&entity.Redirection{UserId: userId}).Group("hit_count").Having("MIN(hit_count) >= 0").Order("hit_count ASC").First(&mostNotVisitedRedirection).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return
+		}
+	}
+	c <- DashboardResponseChan{name: "mnv", data: mostNotVisitedRedirection}
+}
+
+// get last created
+func (conn *connection) getLastCreated(userId string, wg *sync.WaitGroup, c chan<- DashboardResponseChan) {
+	defer wg.Done()
+
+	var lastCreatedRedirection entity.Redirection
+	if err := conn.db.Where(&entity.Redirection{UserId: userId}).Group("created_at").Having("MIN(created_at)").Order("created_at DESC").First(&lastCreatedRedirection).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return
+		}
+	}
+	c <- DashboardResponseChan{name: "lc", data: lastCreatedRedirection}
 }
