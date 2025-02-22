@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -45,9 +46,13 @@ func RunUrlSeeder(count int) ([]entity.Redirection, error) {
 	urlEntities := []entity.Redirection{}
 	userEntity := entity.User{}
 
-	if err := DBConn.First(&userEntity).Error; err != nil {
+	if err := DBConn.Where(entity.User{Email: "superuser@nerdproject.id"}).First(&userEntity).Error; err != nil {
 		log.Println("Error DB: ", err.Error())
 		return nil, err
+	}
+
+	if userEntity.Id == "" {
+		return nil, errors.New("Superuser not found")
 	}
 
 	for i := 0; i < count; i++ {
