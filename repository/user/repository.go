@@ -69,7 +69,7 @@ func FindUserById(userId string) (*entity.User, error) {
 	cacheKey := fmt.Sprintf("user:detail:%v", userId)
 	userEntity := entity.User{}
 
-	user, _ := config.CacheRememberV2(cacheKey, 3600, func() interface{} {
+	user, err := config.CacheRememberV2(cacheKey, 3600, func() interface{} {
 		userEntity := entity.User{}
 
 		err := config.DBConn.Where(&entity.User{Id: userId}).First(&userEntity).Error
@@ -84,9 +84,15 @@ func FindUserById(userId string) (*entity.User, error) {
 		return &userEntity
 	}, &userEntity)
 
-	dataUser := user.(*entity.User)
+	if err != nil {
+		return nil, err
+	}
 
-	return dataUser, nil
+	if dataUser, ok := user.(*entity.User); ok {
+		return dataUser, nil
+	}
+
+	return nil, errors.New("user not found")
 }
 
 func DoLogin(email string, password string) (*Token, error) {
