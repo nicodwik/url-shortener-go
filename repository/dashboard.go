@@ -84,7 +84,7 @@ func (conn *connection) getMostVisited(userId string, wg *sync.WaitGroup, c chan
 	defer wg.Done()
 
 	var mostVisitedRedirection entity.Redirection
-	if err := conn.db.Where(&entity.Redirection{UserId: userId}).Group("hit_count").Having("MAX(hit_count)").Order("hit_count DESC").First(&mostVisitedRedirection).Error; err != nil {
+	if err := conn.db.Where(&entity.Redirection{UserId: userId}).Order("hit_count DESC").First(&mostVisitedRedirection).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return
 		}
@@ -97,7 +97,7 @@ func (conn *connection) getMostNotVisited(userId string, wg *sync.WaitGroup, c c
 	defer wg.Done()
 
 	var mostNotVisitedRedirection entity.Redirection
-	if err := conn.db.Where(&entity.Redirection{UserId: userId}).Group("hit_count").Having("MIN(hit_count) >= 0").Order("hit_count ASC").First(&mostNotVisitedRedirection).Error; err != nil {
+	if err := conn.db.Where(&entity.Redirection{UserId: userId}).Order("hit_count ASC").First(&mostNotVisitedRedirection).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return
 		}
@@ -110,7 +110,7 @@ func (conn *connection) getLastCreated(userId string, wg *sync.WaitGroup, c chan
 	defer wg.Done()
 
 	var lastCreatedRedirection entity.Redirection
-	if err := conn.db.Where(&entity.Redirection{UserId: userId}).Group("created_at").Having("MIN(created_at)").Order("created_at DESC").First(&lastCreatedRedirection).Error; err != nil {
+	if err := conn.db.Where(&entity.Redirection{UserId: userId}).Order("created_at DESC").First(&lastCreatedRedirection).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return
 		}
