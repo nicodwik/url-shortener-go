@@ -8,7 +8,7 @@ import (
 	"url-shortener-go/entity"
 	"url-shortener-go/helpers"
 
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"github.com/go-faker/faker/v4"
@@ -27,8 +27,9 @@ func InitDB() (*gorm.DB, error) {
 	dbPort := helpers.Env("DB_PORT", "3306")
 	dbPassword := helpers.Env("DB_PASSWORD", "root")
 
-	dsn := fmt.Sprintf("root:%v@tcp(%v:%v)/url_shortener?parseTime=True", dbPassword, dbHost, dbPort)
-	db, err := gorm.Open(mysql.Open(dsn))
+	// dsn := fmt.Sprintf("postgres:%v@tcp(%v:%v)/url_shortener?parseTime=True", dbPassword, dbHost, dbPort)
+	dsn := fmt.Sprintf("host=%s user=postgres password=%s dbname=url_shortener port=%s", dbHost, dbPassword, dbPort)
+	db, err := gorm.Open(postgres.Open(dsn))
 
 	if err != nil {
 		return nil, err

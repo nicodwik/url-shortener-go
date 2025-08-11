@@ -15,7 +15,7 @@ import (
 var RedisConn *redis.Client
 var ctx = context.Background()
 
-func InitCache() {
+func InitCache() error {
 	redisHost := helpers.Env("REDIS_HOST", "host.docker.internal")
 	redisPort := helpers.Env("REDIS_PORT", "6379")
 
@@ -25,7 +25,13 @@ func InitCache() {
 		DB:       1,
 	})
 
+	if err := redis.Ping(ctx).Err(); err != nil {
+		return err
+	}
+
 	RedisConn = redis
+
+	return nil
 }
 
 func CacheRemember(key string, timeout int, callback func() interface{}) (string, error) {
