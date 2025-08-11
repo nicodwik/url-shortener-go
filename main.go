@@ -20,12 +20,12 @@ func main() {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	if err := config.InitCache(); err != nil {
-		log.Fatalf("Error connecting to cache: %v", err)
-	}
-
 	if _, err := config.InitDB(); err != nil {
 		log.Fatalf("Error connecting to database: %v", err)
+	}
+
+	if err := config.InitCache(); err != nil {
+		log.Fatalf("Error connecting to cache: %v", err)
 	}
 
 	go scheduler.Init()

@@ -1,12 +1,17 @@
 services:
     be-service:
         container_name: url-shortener-be-service
-        build:
-            context: ./
-            dockerfile: Dockerfile.production
+        image: nicodwik/url-shortener-go:1.0
         ports:
             - '${APP_PORT:-8001}:8001'
         restart: always
+        environment:
+            - APP_PORT=8001
+            - DB_HOST=
+            - DB_PORT=
+            - DB_PASSWORD=
+            - REDIS_HOST=
+            - REDIS_PORT=
         extra_hosts:
             - host.docker.internal:host-gateway
         networks:

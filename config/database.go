@@ -24,7 +24,7 @@ type UrlSeeder struct {
 func InitDB() (*gorm.DB, error) {
 
 	dbHost := helpers.Env("DB_HOST", "host.docker.internal")
-	dbPort := helpers.Env("DB_PORT", "3306")
+	dbPort := helpers.Env("DB_PORT", "5432")
 	dbPassword := helpers.Env("DB_PASSWORD", "root")
 
 	// dsn := fmt.Sprintf("postgres:%v@tcp(%v:%v)/url_shortener?parseTime=True", dbPassword, dbHost, dbPort)
