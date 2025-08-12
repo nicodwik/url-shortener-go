@@ -32,4 +32,4 @@ jobs:
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/url-shortener-go:latest
 
     - name: Trigger Portainer webhook
-      run: curl -X POST https://portainer.nico-dk.my.id/api/webhooks/c26a80c2-a49d-47fe-83e0-fd178a6814f0
+      run: curl -X POST https://portainer.nico-dk.my.id/api/webhooks/${{ secrets.PORTAINER_WEBHOOK_ID }}
