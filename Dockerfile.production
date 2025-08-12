@@ -8,6 +8,5 @@ FROM alpine/curl:8.5.0
 
 WORKDIR /app
 RUN cp .env.example .env
-COPY .env .
 COPY --from=builder /app/executable.sh /app/executable.sh
 CMD ["/app/executable.sh"]
