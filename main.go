@@ -37,7 +37,9 @@ func main() {
 	e := echo.New()
 	routes.Init(e, *dashboardController)
 
-	appPort := fmt.Sprintf(":%v", helpers.Env("APP_PORT", "8000"))
+	fmt.Println("test pipeline success")
+
+	appPort := fmt.Sprintf(":%s", helpers.Env("APP_PORT", "8000"))
 	if err := e.Start(appPort); err != nil {
 		log.Fatalf("Error Starting Server: %v", err)
 	}
