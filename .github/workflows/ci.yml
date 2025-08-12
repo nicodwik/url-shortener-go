@@ -29,4 +29,4 @@ jobs:
         context: .
         push: true
         file: ./Dockerfile.production
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/nicodwik/url-shortener-go:latest
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/url-shortener-go:latest
