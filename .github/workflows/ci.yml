@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Auto Deployment
 
 on:
   push:
@@ -29,4 +29,9 @@ jobs:
         context: .
         push: true
         file: ./Dockerfile.production
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/url-shortener-go:latest
+        tags: | 
+          ${{ secrets.DOCKERHUB_USERNAME }}/url-shortener-go:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/url-shortener-go:${{ github.sha }}
+
+    - name: Trigger Portainer webhook
+      run: curl -X POST https://portainer.nico-dk.my.id/api/webhooks/c26a80c2-a49d-47fe-83e0-fd178a6814f0
