@@ -85,8 +85,8 @@ jobs:
 
           cat kiro_output.txt
 
-          TITLE=$(sed -n 's/^TITLE:[[:space:]]*//p' kiro_output.txt | head -n1)
-          awk '/^BODY:$/{flag=1; next} flag' kiro_output.txt > pr_body.md
+          TITLE=$(sed -n 's/^PR Title:[[:space:]]*//p' kiro_output.txt | head -n1)
+          awk '/^PR Body:$/{flag=1; next} flag' kiro_output.txt > pr_body.md
 
           {
             echo "title<<EOF"
