@@ -66,7 +66,10 @@ jobs:
             echo "  Fill this into whichever field of the template is meant for the ticket/issue link."
             echo "- Fill the 'Summary of Changes' section using precise technical language,"
             echo "  explicitly naming the files, functions, or code changes involved (derive"
-            echo "  this from the diff below), and use code formatting for any filenames, functions, or code snippets."
+            echo "  this from the diff below)."
+            echo "- Use inline code formatting (backticks) for any filenames, function/method"
+            echo "  names, variable names, routes, or code snippets anywhere in the PR body -"
+            echo "  e.g. write \`controllers/health.go\` and \`HealthCheck()\`, not plain text."
             echo "- Any checklist / validation items in the template must all be checked off"
             echo "  (marked as done, e.g. [x])."
             echo "- Fill in every field/section of the template EXCEPT any 'Additional Notes'"
@@ -99,9 +102,22 @@ jobs:
             echo "$(cat diff_excerpt.txt)"
           } > kiro_prompt.txt
 
-          kiro-cli chat --no-interactive --model claude-haiku-4.5 --trust-tools=read,grep "$(cat kiro_prompt.txt)" > kiro_output.txt
+          kiro-cli chat --no-interactive --trust-tools=read,grep "$(cat kiro_prompt.txt)" > kiro_raw.txt
 
-          cat kiro_output.txt
+          cat kiro_raw.txt
+
+          # Strip any leftover ANSI escape codes (belt-and-suspenders alongside
+          # KIRO_LOG_NO_COLOR; includes CSI private-mode sequences like ESC[?25l),
+          # code fences, and known Kiro CLI status-line noise. Status lines are
+          # indented with a leading space by the CLI, whereas real markdown
+          # bullets in the PR body ("- Added ...", "- [x] Unit Test") are flush
+          # left with no leading space - the [[:space:]] anchor below is what
+          # keeps this filter from eating actual PR body content.
+          sed -E 's/\x1B\[[?0-9;]*[a-zA-Z]//g' kiro_raw.txt \
+            | sed '/^```/d' \
+            | grep -vE '^[[:space:]]+(✓|❗|▸|-) |Searching for files:|Reading file:|\(using tool:|Completed in|Successfully (found|read)' \
+            | sed 's/^> //' \
+            > kiro_output.txt
 
           TITLE=$(awk '/^===TITLE===$/{flag=1; next} /^===BODY===$/{flag=0} flag' kiro_output.txt \
             | sed '/^[[:space:]]*$/d' | head -n1)
