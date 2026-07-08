@@ -12,6 +12,9 @@ import (
 
 func Init(e *echo.Echo, DashboardController controllers.DashboardController) {
 
+	// Health check endpoint (no auth required)
+	e.GET("/health", controllers.HealthCheck)
+
 	v1 := e.Group("/api/v1")
 	redirection := v1.Group("/redirection")
 	user := v1.Group("/user")
