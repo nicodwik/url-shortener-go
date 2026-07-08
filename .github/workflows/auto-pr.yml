@@ -99,9 +99,9 @@ jobs:
             echo "$(cat diff_excerpt.txt)"
           } > kiro_prompt.txt
 
-          kiro-cli chat --no-interactive --model claude-haiku-4.5 --trust-tools=read,grep "$(cat kiro_prompt.txt)" > kiro_raw.txt
+          kiro-cli chat --no-interactive --model claude-haiku-4.5 --trust-tools=read,grep "$(cat kiro_prompt.txt)" > kiro_output.txt
 
-          cat kiro_raw.txt
+          cat kiro_output.txt
 
           TITLE=$(awk '/^===TITLE===$/{flag=1; next} /^===BODY===$/{flag=0} flag' kiro_output.txt \
             | sed '/^[[:space:]]*$/d' | head -n1)
