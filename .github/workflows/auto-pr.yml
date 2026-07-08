@@ -74,6 +74,21 @@ jobs:
             echo "  items, sections, or headings. Only fill in placeholders/content within"
             echo "  the existing structure."
             echo ""
+            echo "Output your answer using EXACTLY these literal marker lines - do not"
+            echo "rename, translate, or rephrase them (e.g. do not write 'PR Title:' or"
+            echo "'PR Body:' - use the markers exactly as shown below, each on its own line):"
+            echo ""
+            echo "===TITLE==="
+            echo "<the generated PR title, single line>"
+            echo "===BODY==="
+            echo "<the completed PR body as raw markdown>"
+            echo ""
+            echo "Do not wrap any part of the output in code fences (no triple backticks)."
+            echo "Do not add any preamble, explanation, or commentary before ===TITLE==="
+            echo "or after the body content."
+            echo ""
+            echo "Branch name: $BRANCH_NAME"
+            echo ""
             echo "Commit list:"
             echo "$(cat commits.txt)"
             echo ""
@@ -81,12 +96,31 @@ jobs:
             echo "$(cat diff_excerpt.txt)"
           } > kiro_prompt.txt
 
-          kiro-cli chat --no-interactive --trust-tools=read,grep "$(cat kiro_prompt.txt)" > kiro_output.txt
+          kiro-cli chat --no-interactive --trust-tools=read,grep "$(cat kiro_prompt.txt)" > kiro_raw.txt
 
-          cat kiro_output.txt
+          cat kiro_raw.txt
 
-          TITLE=$(sed -n 's/^PR Title:[[:space:]]*//p' kiro_output.txt | head -n1)
-          awk '/^PR Body:$/{flag=1; next} flag' kiro_output.txt > pr_body.md
+          # Safety net: strip any code fences Kiro might add despite instructions
+          sed '/^```/d' kiro_raw.txt > kiro_output.txt
+
+          TITLE=$(awk '/^===TITLE===$/{flag=1; next} /^===BODY===$/{flag=0} flag' kiro_output.txt \
+            | sed '/^[[:space:]]*$/d' | head -n1)
+
+          awk '/^===BODY===$/{flag=1; next} flag' kiro_output.txt > pr_body.md
+
+          if [ -z "$TITLE" ]; then
+            echo "::error::Kiro did not return a usable PR title in the expected format."
+            echo "Raw Kiro output was:"
+            cat kiro_raw.txt
+            exit 1
+          fi
+
+          if [ ! -s pr_body.md ]; then
+            echo "::error::Kiro did not return a usable PR body in the expected format."
+            echo "Raw Kiro output was:"
+            cat kiro_raw.txt
+            exit 1
+          fi
 
           {
             echo "title<<EOF"
