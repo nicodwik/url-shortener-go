@@ -1,0 +1,115 @@
+name: Auto Create PR
+
+# Triggers on every push to any branch except the default branch.
+# The job itself is gated by the commit message prefix check below,
+# so pushes without "[AUTO-PR]" in the HEAD commit message are no-ops.
+on:
+  push:
+    branches-ignore:
+      - main
+      - master
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  auto-pr:
+    runs-on: ubuntu-latest
+    # Hard gate: only proceed if the triggering commit message starts with [AUTO-PR]
+    if: startsWith(github.event.head_commit.message, '[AUTO-PR]')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Kiro CLI
+        run: curl -fsSL https://cli.kiro.dev/install | bash
+
+      - name: Fetch base branch
+        run: git fetch origin "${{ github.event.repository.default_branch }}"
+
+      - name: Gather commit list and diff
+        id: gather
+        run: |
+          BASE_BRANCH="${{ github.event.repository.default_branch }}"
+
+          git log "origin/${BASE_BRANCH}..HEAD" --pretty=format:"%h %s" > commits.txt || true
+
+          # Cap the diff size so we don't blow past prompt limits on huge branches
+          git diff "origin/${BASE_BRANCH}...HEAD" > full_diff.txt || true
+          head -c 20000 full_diff.txt > diff_excerpt.txt
+
+      - name: Fill PR template with Kiro CLI
+        id: kiro
+        env:
+          KIRO_API_KEY: ${{ secrets.KIRO_API_KEY }}
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+
+          {
+            echo "Search this repository's .github directory for a pull request template"
+            echo "(e.g. PULL_REQUEST_TEMPLATE.md, pull_request_template.md, or a file under"
+            echo "PULL_REQUEST_TEMPLATE/). Read it fully."
+            echo ""
+            echo "Then produce a PR title and a completed PR body, following these RULES:"
+            echo "- PR title: summarize the commit list below into a single semantic-commit"
+            echo "  style title, prefixed with an uppercase type in square brackets, e.g."
+            echo "  [FEAT], [FIX], [CHORE], [REFACTOR], [DOCS], [TEST], [PERF], [STYLE]."
+            echo "  Pick the type that best matches the overall intent of the commits."
+            echo "- Ticket number: use the branch name as the ticket reference, hyperlinked"
+            echo "  as https://idnmedia.atlassian.net/browse/${BRANCH_NAME}"
+            echo "  Fill this into whichever field of the template is meant for the ticket/issue link."
+            echo "- Fill the 'Summary of Changes' section using precise technical language,"
+            echo "  explicitly naming the files, functions, or code changes involved (derive"
+            echo "  this from the diff below)."
+            echo "- Any checklist / validation items in the template must all be checked off"
+            echo "  (marked as done, e.g. [x])."
+            echo "- Fill in every field/section of the template EXCEPT any 'Additional Notes'"
+            echo "  section (or equivalently named section) - leave that one empty/untouched."
+            echo "- Remove all blockquote lines (lines starting with '>') from the template -"
+            echo "  those are just instructions for humans and must not appear in the output."
+            echo "- DO NOT modify the template's structure: do not add or remove any list"
+            echo "  items, sections, or headings. Only fill in placeholders/content within"
+            echo "  the existing structure."
+            echo ""
+            echo "Commit list:"
+            echo "$(cat commits.txt)"
+            echo ""
+            echo "Diff (truncated to first 20000 chars):"
+            echo "$(cat diff_excerpt.txt)"
+          } > kiro_prompt.txt
+
+          kiro-cli chat --no-interactive --trust-tools=read,grep "$(cat kiro_prompt.txt)" > kiro_output.txt
+
+          cat kiro_output.txt
+
+          TITLE=$(sed -n 's/^TITLE:[[:space:]]*//p' kiro_output.txt | head -n1)
+          awk '/^BODY:$/{flag=1; next} flag' kiro_output.txt > pr_body.md
+
+          {
+            echo "title<<EOF"
+            echo "$TITLE"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BASE_BRANCH="${{ github.event.repository.default_branch }}"
+          HEAD_BRANCH="${{ github.ref_name }}"
+
+          # Skip if a PR already exists for this branch
+          EXISTING=$(gh pr list --head "$HEAD_BRANCH" --base "$BASE_BRANCH" --json number --jq '.[0].number')
+          if [ -n "$EXISTING" ]; then
+            echo "PR #$EXISTING already exists for $HEAD_BRANCH, skipping creation."
+            exit 0
+          fi
+
+          gh pr create \
+            --base "$BASE_BRANCH" \
+            --head "$HEAD_BRANCH" \
+            --title "${{ steps.kiro.outputs.title }}" \
+            --body-file pr_body.md
