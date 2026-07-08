@@ -45,6 +45,9 @@ jobs:
         id: kiro
         env:
           KIRO_API_KEY: ${{ secrets.KIRO_API_KEY }}
+          # Prevents ANSI color codes from wrapping the ===TITLE===/===BODY=== markers,
+          # which would otherwise break exact-match parsing below (v1.26.0+)
+          KIRO_LOG_NO_COLOR: "1"
         run: |
           BRANCH_NAME="${{ github.ref_name }}"
 
@@ -64,6 +67,9 @@ jobs:
             echo "- Fill the 'Summary of Changes' section using precise technical language,"
             echo "  explicitly naming the files, functions, or code changes involved (derive"
             echo "  this from the diff below)."
+            echo "- Use inline code formatting (backticks) for any filenames, function/method"
+            echo "  names, variable names, routes, or code snippets anywhere in the PR body -"
+            echo "  e.g. write \`controllers/health.go\` and \`HealthCheck()\`, not plain text."
             echo "- Any checklist / validation items in the template must all be checked off"
             echo "  (marked as done, e.g. [x])."
             echo "- Fill in every field/section of the template EXCEPT any 'Additional Notes'"
@@ -74,6 +80,21 @@ jobs:
             echo "  items, sections, or headings. Only fill in placeholders/content within"
             echo "  the existing structure."
             echo ""
+            echo "Output your answer using EXACTLY these literal marker lines - do not"
+            echo "rename, translate, or rephrase them (e.g. do not write 'PR Title:' or"
+            echo "'PR Body:' - use the markers exactly as shown below, each on its own line):"
+            echo ""
+            echo "===TITLE==="
+            echo "<the generated PR title, single line>"
+            echo "===BODY==="
+            echo "<the completed PR body as raw markdown>"
+            echo ""
+            echo "Do not wrap any part of the output in code fences (no triple backticks)."
+            echo "Do not add any preamble, explanation, or commentary before ===TITLE==="
+            echo "or after the body content."
+            echo ""
+            echo "Branch name: $BRANCH_NAME"
+            echo ""
             echo "Commit list:"
             echo "$(cat commits.txt)"
             echo ""
@@ -81,12 +102,27 @@ jobs:
             echo "$(cat diff_excerpt.txt)"
           } > kiro_prompt.txt
 
-          kiro-cli chat --no-interactive --trust-tools=read,grep "$(cat kiro_prompt.txt)" > kiro_output.txt
+          kiro-cli chat --no-interactive --trust-tools=read,grep "$(cat kiro_prompt.txt)" > kiro_raw.txt
 
-          cat kiro_output.txt
+          cat kiro_raw.txt
 
-          TITLE=$(sed -n 's/^TITLE:[[:space:]]*//p' kiro_output.txt | head -n1)
-          awk '/^BODY:$/{flag=1; next} flag' kiro_output.txt > pr_body.md
+          # Strip any leftover ANSI escape codes (belt-and-suspenders alongside
+          # KIRO_LOG_NO_COLOR; includes CSI private-mode sequences like ESC[?25l),
+          # code fences, and known Kiro CLI status-line noise. Status lines are
+          # indented with a leading space by the CLI, whereas real markdown
+          # bullets in the PR body ("- Added ...", "- [x] Unit Test") are flush
+          # left with no leading space - the [[:space:]] anchor below is what
+          # keeps this filter from eating actual PR body content.
+          sed -E 's/\x1B\[[?0-9;]*[a-zA-Z]//g' kiro_raw.txt \
+            | sed '/^```/d' \
+            | grep -vE '^[[:space:]]+(✓|❗|▸|-) |Searching for files:|Reading file:|\(using tool:|Completed in|Successfully (found|read)' \
+            | sed 's/^> //' \
+            > kiro_output.txt
+
+          TITLE=$(awk '/^===TITLE===$/{flag=1; next} /^===BODY===$/{flag=0} flag' kiro_output.txt \
+            | sed '/^[[:space:]]*$/d' | head -n1)
+
+          awk '/^===BODY===$/{flag=1; next} flag' kiro_output.txt > pr_body.md
 
           {
             echo "title<<EOF"

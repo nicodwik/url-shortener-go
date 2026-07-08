@@ -42,6 +42,13 @@ func InitDB() (*gorm.DB, error) {
 	return db, nil
 }
 
+func GetDB() (*gorm.DB, error) {
+	if DBConn == nil {
+		return nil, errors.New("database connection not initialized")
+	}
+	return DBConn, nil
+}
+
 func RunUrlSeeder(count int) ([]entity.Redirection, error) {
 
 	urlEntities := []entity.Redirection{}

@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -14,6 +15,13 @@ import (
 
 var RedisConn *redis.Client
 var ctx = context.Background()
+
+func GetCache() (*redis.Client, error) {
+	if RedisConn == nil {
+		return nil, errors.New("cache connection not initialized")
+	}
+	return RedisConn, nil
+}
 
 func InitCache() error {
 	redisHost := helpers.Env("REDIS_HOST", "host.docker.internal")
